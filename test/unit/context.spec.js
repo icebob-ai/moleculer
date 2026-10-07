@@ -2,7 +2,7 @@
 
 const Context = require("../../src/context");
 const ServiceBroker = require("../../src/service-broker");
-const { RequestSkippedError, MaxCallLevelError } = require("../../src/errors");
+const { RequestSkippedError, MaxCallLevelError, MoleculerError } = require("../../src/errors");
 const { protectReject } = require("./utils");
 const lolex = require("@sinonjs/fake-timers");
 
@@ -1046,6 +1046,64 @@ describe("Test broadcast method", () => {
 			headers: {
 				contentType: "json"
 			}
+		});
+	});
+});
+
+describe("Test emit & broadcast method with invalid options", () => {
+	const broker = new ServiceBroker({ logger: false });
+	broker.emit = jest.fn();
+	broker.broadcast = jest.fn();
+
+	const ctx = new Context(broker);
+
+	beforeEach(() => {
+		broker.emit.mockClear();
+		broker.broadcast.mockClear();
+	});
+
+	describe.each(["emit", "broadcast"])("ctx.%s", method => {
+		it.each([
+			["mailer", "a string"],
+			[["mailer"], "an array"],
+			[[], "an array"],
+			[5, "a number"],
+			[true, "a boolean"],
+			[() => {}, "a function"]
+		])("should throw if the third parameter is %p", (opts, received) => {
+			expect(() => ctx[method]("user.created", { id: 5 }, opts)).toThrow(
+				new MoleculerError(
+					`The third parameter of 'ctx.${method}' must be an options object, e.g. { groups: ["mailer"] }, but received ${received}.`
+				)
+			);
+			expect(broker[method]).toHaveBeenCalledTimes(0);
+		});
+
+		it("should not set the parentCtx on an array (the old groups shorthand)", () => {
+			const groups = ["mailer"];
+			expect(() => ctx[method]("user.created", null, groups)).toThrow(MoleculerError);
+			expect(groups.parentCtx).toBeUndefined();
+		});
+
+		it("should set type & data on the thrown error", () => {
+			let err;
+			try {
+				ctx[method]("user.created", null, "mailer");
+			} catch (e) {
+				err = e;
+			}
+			expect(err).toBeInstanceOf(MoleculerError);
+			expect(err.code).toBe(500);
+			expect(err.type).toBe("INVALID_PARAMETERS");
+			expect(err.data).toEqual({ method: `ctx.${method}` });
+		});
+
+		it.each([undefined, null])("should accept %p as options", opts => {
+			ctx[method]("user.created", null, opts);
+			expect(broker[method]).toHaveBeenCalledTimes(1);
+			expect(broker[method]).toHaveBeenCalledWith("user.created", null, {
+				parentCtx: ctx
+			});
 		});
 	});
 });

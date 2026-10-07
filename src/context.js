@@ -9,6 +9,7 @@
 const util = require("util");
 const { pick } = require("lodash");
 const { RequestSkippedError, MaxCallLevelError } = require("./errors");
+const utils = require("./utils");
 
 /**
  * @typedef {import("./context")} ContextClass
@@ -424,6 +425,7 @@ class Context {
 	 * @memberof Context
 	 */
 	emit(eventName, data, opts) {
+		utils.assertEventOptions(opts, "ctx.emit");
 		opts = opts ?? {};
 		opts.parentCtx = this;
 
@@ -446,6 +448,7 @@ class Context {
 	 * @memberof Context
 	 */
 	broadcast(eventName, data, opts) {
+		utils.assertEventOptions(opts, "ctx.broadcast");
 		opts = opts ?? {};
 		opts.parentCtx = this;
 

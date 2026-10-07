@@ -1448,8 +1448,8 @@ class ServiceBroker {
 	 * @memberof ServiceBroker
 	 */
 	emit(eventName, payload, opts) {
-		if (Array.isArray(opts) || utils.isString(opts)) opts = { groups: opts };
-		else if (opts == null) opts = {};
+		utils.assertEventOptions(opts, "broker.emit");
+		if (opts == null) opts = {};
 
 		if (opts.groups && !Array.isArray(opts.groups)) opts.groups = [opts.groups];
 
@@ -1549,8 +1549,8 @@ class ServiceBroker {
 	 * @memberof ServiceBroker
 	 */
 	broadcast(eventName, payload, opts) {
-		if (Array.isArray(opts) || utils.isString(opts)) opts = { groups: opts };
-		else if (opts == null) opts = {};
+		utils.assertEventOptions(opts, "broker.broadcast");
+		if (opts == null) opts = {};
 
 		if (opts.groups && !Array.isArray(opts.groups)) opts.groups = [opts.groups];
 
@@ -1630,8 +1630,8 @@ class ServiceBroker {
 	 * @memberof ServiceBroker
 	 */
 	broadcastLocal(eventName, payload, opts) {
-		if (Array.isArray(opts) || utils.isString(opts)) opts = { groups: opts };
-		else if (opts == null) opts = {};
+		utils.assertEventOptions(opts, "broker.broadcastLocal");
+		if (opts == null) opts = {};
 
 		if (opts.groups && !Array.isArray(opts.groups)) opts.groups = [opts.groups];
 
