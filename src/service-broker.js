@@ -1451,7 +1451,9 @@ class ServiceBroker {
 		utils.assertEventOptions(opts, "broker.emit");
 		if (opts == null) opts = {};
 
-		if (opts.groups && !Array.isArray(opts.groups)) opts.groups = [opts.groups];
+		// Normalize into a copy, the caller's options object can be shared.
+		if (opts.groups && !Array.isArray(opts.groups))
+			opts = Object.assign({}, opts, { groups: [opts.groups] });
 
 		const promises = [];
 
@@ -1552,7 +1554,9 @@ class ServiceBroker {
 		utils.assertEventOptions(opts, "broker.broadcast");
 		if (opts == null) opts = {};
 
-		if (opts.groups && !Array.isArray(opts.groups)) opts.groups = [opts.groups];
+		// Normalize into a copy, the caller's options object can be shared.
+		if (opts.groups && !Array.isArray(opts.groups))
+			opts = Object.assign({}, opts, { groups: [opts.groups] });
 
 		const promises = [];
 
@@ -1633,7 +1637,9 @@ class ServiceBroker {
 		utils.assertEventOptions(opts, "broker.broadcastLocal");
 		if (opts == null) opts = {};
 
-		if (opts.groups && !Array.isArray(opts.groups)) opts.groups = [opts.groups];
+		// Normalize into a copy, the caller's options object can be shared.
+		if (opts.groups && !Array.isArray(opts.groups))
+			opts = Object.assign({}, opts, { groups: [opts.groups] });
 
 		this.logger.debug(
 			`Broadcast '${eventName}' local event` +

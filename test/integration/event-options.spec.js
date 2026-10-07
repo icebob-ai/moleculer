@@ -13,6 +13,9 @@ const { MoleculerError } = require("../../src/errors");
 describe("Test the third (options) parameter of emit/broadcast/broadcastLocal", () => {
 	let received = [];
 
+	// An options object reused by many calls (e.g. a module-level constant)
+	const SHARED_OPTS = { groups: "mailer" };
+
 	const recorder = name => ({
 		name,
 		events: {
@@ -44,6 +47,10 @@ describe("Test the third (options) parameter of emit/broadcast/broadcastLocal", 
 			// Calls ctx.emit/ctx.broadcast with the given third parameter
 			notify(ctx) {
 				return ctx[ctx.params.method]("user.created", { id: 1 }, ctx.params.opts);
+			},
+			// Calls ctx.emit/ctx.broadcast with the shared options object
+			notifyShared(ctx) {
+				return ctx[ctx.params.method]("user.created", { id: 1 }, SHARED_OPTS);
 			}
 		}
 	});
@@ -203,5 +210,32 @@ describe("Test the third (options) parameter of emit/broadcast/broadcastLocal", 
 			expect(err.message).toBe(errorMessage(`broker.${method}`, desc));
 			expect(err.type).toBe("INVALID_PARAMETERS");
 		});
+	});
+	describe("shared options object", () => {
+		it.each(["emit", "broadcast"])(
+			"ctx.%s should not write the context into the caller's options object",
+			async method => {
+				await apiNode.call(
+					"api.notifyShared",
+					{ method },
+					{ meta: { user: "john" }, requestID: "req-shared" }
+				);
+				await flush();
+
+				expect(SHARED_OPTS).toEqual({ groups: "mailer" });
+				expect(SHARED_OPTS.parentCtx).toBeUndefined();
+
+				// A later emit outside of any context must not inherit the old request
+				received = [];
+				await apiNode.emit("user.created", { id: 2 }, SHARED_OPTS);
+				await flush();
+
+				const mailer = received.filter(r => r.service === "mailer");
+				expect(mailer).toHaveLength(1);
+				expect(mailer[0].requestID).not.toBe("req-shared");
+				expect(mailer[0].meta).toEqual({});
+				expect(mailer[0].level).toBe(1);
+			}
+		);
 	});
 });

@@ -426,8 +426,9 @@ class Context {
 	 */
 	emit(eventName, data, opts) {
 		utils.assertEventOptions(opts, "ctx.emit");
-		opts = opts ?? {};
-		opts.parentCtx = this;
+		// Copy it: the caller's options object can be shared (e.g. a constant),
+		// so it must not keep a reference to this context.
+		opts = Object.assign({}, opts, { parentCtx: this });
 
 		if (opts.groups && !Array.isArray(opts.groups)) opts.groups = [opts.groups];
 
@@ -449,8 +450,9 @@ class Context {
 	 */
 	broadcast(eventName, data, opts) {
 		utils.assertEventOptions(opts, "ctx.broadcast");
-		opts = opts ?? {};
-		opts.parentCtx = this;
+		// Copy it: the caller's options object can be shared (e.g. a constant),
+		// so it must not keep a reference to this context.
+		opts = Object.assign({}, opts, { parentCtx: this });
 
 		if (opts.groups && !Array.isArray(opts.groups)) opts.groups = [opts.groups];
 

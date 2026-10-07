@@ -952,6 +952,18 @@ describe("Test emit method", () => {
 
 	const ctx = new Context(broker);
 
+	it("should not modify the caller's options object", () => {
+		broker.emit.mockClear();
+		const opts = { groups: "mail" };
+		ctx.emit("request.rest", null, opts);
+
+		expect(broker.emit).toHaveBeenCalledTimes(1);
+		expect(broker.emit.mock.calls[0][2]).not.toBe(opts);
+		expect(broker.emit.mock.calls[0][2]).toEqual({ parentCtx: ctx, groups: ["mail"] });
+		expect(opts).toEqual({ groups: "mail" });
+		broker.emit.mockClear();
+	});
+
 	it("should call broker.emit method with object param", () => {
 		const data = { id: 5 };
 		ctx.emit("request.rest", data);
@@ -998,6 +1010,18 @@ describe("Test broadcast method", () => {
 	broker.broadcast = jest.fn();
 
 	const ctx = new Context(broker);
+
+	it("should not modify the caller's options object", () => {
+		broker.broadcast.mockClear();
+		const opts = { groups: "mail" };
+		ctx.broadcast("request.rest", null, opts);
+
+		expect(broker.broadcast).toHaveBeenCalledTimes(1);
+		expect(broker.broadcast.mock.calls[0][2]).not.toBe(opts);
+		expect(broker.broadcast.mock.calls[0][2]).toEqual({ parentCtx: ctx, groups: ["mail"] });
+		expect(opts).toEqual({ groups: "mail" });
+		broker.broadcast.mockClear();
+	});
 
 	it("should call broker.broadcast method with object param", () => {
 		const data = { id: 5 };
